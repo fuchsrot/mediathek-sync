@@ -20,11 +20,17 @@ export enum Status {
 
 @Entity()
 export class Task {
-  @PrimaryGeneratedColumn()
+
+  constructor(type: Type) {
+    this.type = type;
+    this.status = Status.NEW;
+  }
+
+  @PrimaryGeneratedColumn({})
   id: string;
 
-  @Column({ nullable: true })
-  mediaId?: string;
+  @Column()
+  targetId: string;
 
   @Column({
     type: 'enum',

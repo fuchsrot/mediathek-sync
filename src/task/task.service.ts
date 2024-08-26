@@ -8,6 +8,7 @@ import { Media } from '../media/media.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task, Status as TaskStatus, Type as TaskType } from './task.entity';
 import { Repository } from 'typeorm';
+import { TargetDto, TaskDto } from './dto';
 
 @Injectable()
 export class TaskService {
@@ -19,17 +20,42 @@ export class TaskService {
     private taskRepository: Repository<Task>,
   ) {}
 
-  getTasks(): Promise<Task[]> {
-    return this.taskRepository.find();
+  async getTasks(): Promise<TaskDto[]> {
+    const dtos: TaskDto[] = [];
+    const tasks = await this.taskRepository.find();
+    for(const task of tasks) {
+      const targetDto: TargetDto = {
+        id: '',
+        title: ''
+      } 
+      if (task.type === TaskType.DOWNLOAD_MEDIA) {
+        const media = await this.mediaService.find(task.targetId);
+        targetDto.id = media.id;
+        targetDto.title = media.title
+      } else {
+        //const source = await this.sourcesService.find(task.id)
+        //targetDto.id = source.id;
+        //targetDto.title = source.title;
+        targetDto.id ='1'
+        targetDto.title = 'todo'
+      }
+      const dto: TaskDto = {
+        id: task.id,
+        createDate: task.createDate,
+        updateDate: task.updateDate,
+        status: task.status,
+        type: task.type,
+        target: targetDto
+      }
+      dtos.push(dto);
+    }
+    return dtos;
   }
 
   @Interval(1000 * 30)
   scheduleRefreshRssTask() {
-    const task: Task = {
-      id: null,
-      status: TaskStatus.NEW,
-      type: TaskType.REFRESH_RSS,
-    };
+    const task = new Task(TaskType.REFRESH_RSS);
+    task.targetId = '1'
     this.taskRepository.save(task);
   }
 
@@ -85,12 +111,8 @@ export class TaskService {
   }
 
   private saveDownloadMediaTask(mediaId: string): void {
-    const task: Task = {
-      id: null,
-      mediaId,
-      status: TaskStatus.NEW,
-      type: TaskType.DOWNLOAD_MEDIA,
-    };
+    const task = new Task(TaskType.DOWNLOAD_MEDIA);
+    task.targetId = mediaId;
     this.taskRepository.save(task);
   }
 }
