@@ -6,7 +6,6 @@ import { CreateSourceDto } from './dto';
 
 @Injectable()
 export class SourcesService {
-
   constructor(
     @InjectRepository(Source)
     private sourceRepository: Repository<Source>,
@@ -19,8 +18,12 @@ export class SourcesService {
     return this.sourceRepository.save(source);
   }
 
-  find(id: string): Promise<Source> {
-    return this.sourceRepository.findOneBy({id});
+  findById(id: string): Promise<Source> {
+    return this.sourceRepository.findOneBy({ id });
+  }
+
+  find(): Promise<Source[]> {
+    return this.sourceRepository.find();
   }
 
   getSources(): string {

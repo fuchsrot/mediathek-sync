@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Task, Status as TaskStatus, Type as TaskType } from './task.entity';
 import { Repository } from 'typeorm';
 import { TargetDto, TaskDto } from './dto';
+import { Source } from '../sources/source.entity';
 
 @Injectable()
 export class TaskService {
@@ -23,21 +24,21 @@ export class TaskService {
   async getTasks(): Promise<TaskDto[]> {
     const dtos: TaskDto[] = [];
     const tasks = await this.taskRepository.find();
-    for(const task of tasks) {
+    for (const task of tasks) {
       const targetDto: TargetDto = {
         id: '',
-        title: ''
-      } 
+        title: '',
+      };
       if (task.type === TaskType.DOWNLOAD_MEDIA) {
-        const media = await this.mediaService.find(task.targetId);
+        const media = await this.mediaService.findById(task.targetId);
         targetDto.id = media.id;
-        targetDto.title = media.title
+        targetDto.title = media.title;
       } else {
         //const source = await this.sourcesService.find(task.id)
         //targetDto.id = source.id;
         //targetDto.title = source.title;
-        targetDto.id ='1'
-        targetDto.title = 'todo'
+        targetDto.id = '1';
+        targetDto.title = 'todo';
       }
       const dto: TaskDto = {
         id: task.id,
@@ -45,18 +46,21 @@ export class TaskService {
         updateDate: task.updateDate,
         status: task.status,
         type: task.type,
-        target: targetDto
-      }
+        target: targetDto,
+      };
       dtos.push(dto);
     }
     return dtos;
   }
 
   @Interval(1000 * 30)
-  scheduleRefreshRssTask() {
-    const task = new Task(TaskType.REFRESH_RSS);
-    task.targetId = '1'
-    this.taskRepository.save(task);
+  async scheduleRefreshRssTask() {
+    const sources = await this.sourcesService.find();
+    for (const source of sources) {
+      const task = new Task(TaskType.REFRESH_RSS);
+      task.targetId = source.id;
+      this.taskRepository.save(task);
+    }
   }
 
   //@Interval(1000 * 60)
@@ -74,7 +78,7 @@ export class TaskService {
         case TaskType.DOWNLOAD_MEDIA:
           break;
         case TaskType.REFRESH_RSS:
-          this.executeRefreshRssTask();
+          this.executeRefreshRssTask(task);
           break;
       }
       this.taskRepository.update(
@@ -84,10 +88,9 @@ export class TaskService {
     }
   }
 
-  private async executeRefreshRssTask() {
-    const feedItems: FeedItem[] = await this.rssService.load(
-      'https://mediathekviewweb.de/feed',
-    );
+  private async executeRefreshRssTask(task: Task) {
+    const source = await this.sourcesService.findById(task.targetId);
+    const feedItems: FeedItem[] = await this.rssService.load(source.url);
 
     const mediaItems: Media[] = feedItems.map((item) => ({
       id: item.guid,
@@ -99,10 +102,11 @@ export class TaskService {
       websiteUrl: item.websiteUrl,
       duration: item.duration,
       status: 'NEW',
+      source: source,
     }));
 
     for (const media of mediaItems) {
-      const known = (await this.mediaService.find(media.id)) !== null;
+      const known = (await this.mediaService.findById(media.id)) !== null;
       if (!known) {
         this.mediaService.save(media);
         this.saveDownloadMediaTask(media.id);

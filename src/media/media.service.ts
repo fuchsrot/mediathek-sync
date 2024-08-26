@@ -14,7 +14,11 @@ export class MediaService {
     this.mediaRepository.save(media);
   }
 
-  async find(id: string): Promise<Media | null> {
+  async findById(id: string): Promise<Media | null> {
     return await this.mediaRepository.findOneBy({ id });
+  }
+
+  async find(): Promise<Media[]> {
+    return await this.mediaRepository.find();
   }
 }

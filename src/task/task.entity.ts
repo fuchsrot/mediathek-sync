@@ -20,7 +20,6 @@ export enum Status {
 
 @Entity()
 export class Task {
-
   constructor(type: Type) {
     this.type = type;
     this.status = Status.NEW;

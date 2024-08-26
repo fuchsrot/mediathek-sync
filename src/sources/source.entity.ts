@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Media } from '../media/media.entity';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 
 @Entity()
 export class Source {
@@ -10,4 +11,7 @@ export class Source {
 
   @Column()
   url: string;
+
+  @OneToMany(() => Media, (media) => media.source)
+  media: Media[];
 }

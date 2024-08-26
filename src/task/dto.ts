@@ -1,22 +1,20 @@
-import { Status, Type } from "./task.entity";
+import { Status, Type } from './task.entity';
 
 export interface TargetDto {
-    id: string;
-    title: string;
+  id: string;
+  title: string;
 }
 
 export interface TaskDto {
+  id: string;
 
-    id: string;
+  target: TargetDto;
 
-    target: TargetDto;
-      
-    status: Status;
+  status: Status;
 
-    type: Type;
-  
-    createDate: Date;
-  
-    updateDate: Date;
+  type: Type;
 
+  createDate: Date;
+
+  updateDate: Date;
 }
