@@ -11,7 +11,6 @@ export class MediaController {
   @Get()
   async getMedia(): Promise<MediaDto[]> {
     const media = await this.mediaService.find();
-    console.log(media);
     return media.map((media) => ({
       id: media.id,
       title: media.title,

@@ -1,3 +1,5 @@
+import { Status } from './media.entity';
+
 export interface SourceDto {
   id: string;
   title: string;
@@ -12,7 +14,7 @@ export interface MediaDto {
   pubDate: string;
   websiteUrl: string;
   duration: number;
-  status: string;
+  status: Status;
   source: SourceDto;
   createDate: Date;
   updateDate: Date;

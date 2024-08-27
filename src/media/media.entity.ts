@@ -8,6 +8,8 @@ import {
   ManyToOne,
 } from 'typeorm';
 
+export type Status = 'NEW' | 'SCHEDULED' | 'RUNNING' | 'DOWNLOADED' | 'DELETED';
+
 @Entity()
 export class Media {
   @PrimaryColumn()
@@ -35,7 +37,7 @@ export class Media {
   duration: number;
 
   @Column()
-  status: string;
+  status: Status;
 
   @ManyToOne(() => Source, (source) => source.media, { eager: true })
   source: Source;
