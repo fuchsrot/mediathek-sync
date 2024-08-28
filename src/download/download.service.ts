@@ -1,4 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class DownloadService {}
+export class DownloadService {
+
+    public download(url: string, file: string) {
+
+    }
+
+}
