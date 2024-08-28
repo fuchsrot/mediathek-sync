@@ -21,43 +21,35 @@ export class TaskService {
     private taskRepository: Repository<Task>,
   ) {}
 
-  async create(dto: CreateTaskDto): Promise<void> {
+  async create(dto: CreateTaskDto): Promise<TaskDto> {
     const task = new Task(dto.type);
     task.status = TaskStatus.NEW;
     task.targetId = dto.targetId;
     this.taskRepository.save(task);
+    let taskDto: TaskDto
     if (dto.type === TaskType.DOWNLOAD_MEDIA) {
       await this.mediaService.updateStatus(dto.targetId, 'SCHEDULED')
+      const media = await this.mediaService.findById(task.targetId);
+      taskDto = this.mapTask(task, media.title)
+    } else {
+      const source = await this.sourcesService.findById(task.targetId);
+      taskDto = this.mapTask(task, source.title)
     }
+    return taskDto;
   }
 
   async getTasks(): Promise<TaskDto[]> {
     const dtos: TaskDto[] = [];
     const tasks = await this.taskRepository.find();
     for (const task of tasks) {
-      const targetDto: TargetDto = {
-        id: '',
-        title: '',
-      };
+      let dto: TaskDto;
       if (task.type === TaskType.DOWNLOAD_MEDIA) {
         const media = await this.mediaService.findById(task.targetId);
-        targetDto.id = media.id;
-        targetDto.title = media.title;
+        dto = this.mapTask(task, media.title)
       } else {
-        //const source = await this.sourcesService.find(task.id)
-        //targetDto.id = source.id;
-        //targetDto.title = source.title;
-        targetDto.id = '1';
-        targetDto.title = 'todo';
+        const source = await this.sourcesService.findById(task.targetId)
+        dto = this.mapTask(task, source.title)
       }
-      const dto: TaskDto = {
-        id: task.id,
-        createDate: task.createDate,
-        updateDate: task.updateDate,
-        status: task.status,
-        type: task.type,
-        target: targetDto,
-      };
       dtos.push(dto);
     }
     return dtos;
@@ -89,12 +81,13 @@ export class TaskService {
           break;
         case TaskType.REFRESH_RSS:
           this.executeRefreshRssTask(task);
+          // TODO
+          this.taskRepository.update(
+            { id: task.id },
+            { status: TaskStatus.COMPLETED },
+          );
           break;
       }
-      this.taskRepository.update(
-        { id: task.id },
-        { status: TaskStatus.COMPLETED },
-      );
     }
   }
 
@@ -119,7 +112,7 @@ export class TaskService {
       const known = (await this.mediaService.findById(media.id)) !== null;
       if (!known) {
         this.mediaService.save(media);
-        this.saveDownloadMediaTask(media.id);
+        //this.saveDownloadMediaTask(media.id);
       }
     }
   }
@@ -128,5 +121,19 @@ export class TaskService {
     const task = new Task(TaskType.DOWNLOAD_MEDIA);
     task.targetId = mediaId;
     this.taskRepository.save(task);
+  }
+
+  private mapTask(task: Task, title: string): TaskDto {
+    return {
+      id: task.id,
+      createDate: task.createDate,
+      updateDate: task.updateDate,
+      status: task.status,
+      type: task.type,
+      target: {
+        id: task.id,
+        title
+      },
+    };
   }
 }

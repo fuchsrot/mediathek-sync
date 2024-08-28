@@ -8,7 +8,7 @@ export class TaskController {
 
   @Post()
   @HttpCode(204)
-  create(@Body() dto: CreateTaskDto): Promise<void> {
+  create(@Body() dto: CreateTaskDto): Promise<TaskDto> {
     return this.taskService.create(dto);
   }
 
