@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, HttpCode } from '@nestjs/common';
 import { SourcesService } from './sources.service';
-import { CreateSourceDto } from './dto';
+import { CreateSourceDto, SourceDto } from './dto';
 
 @Controller('sources')
 export class SourcesController {
@@ -13,8 +13,7 @@ export class SourcesController {
   }
 
   @Get()
-  getHello(): string {
-    return 'sources';
-    //return this.sourcesService.getHello();
+  getHello(): Promise<SourceDto[]> {
+    return this.sourcesService.find();
   }
 }

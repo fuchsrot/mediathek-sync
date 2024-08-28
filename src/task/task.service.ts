@@ -8,7 +8,7 @@ import { Media } from '../media/media.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task, Status as TaskStatus, Type as TaskType } from './task.entity';
 import { Repository } from 'typeorm';
-import { TargetDto, TaskDto } from './dto';
+import { CreateTaskDto, TargetDto, TaskDto } from './dto';
 import { Source } from '../sources/source.entity';
 
 @Injectable()
@@ -20,6 +20,16 @@ export class TaskService {
     @InjectRepository(Task)
     private taskRepository: Repository<Task>,
   ) {}
+
+  async create(dto: CreateTaskDto): Promise<void> {
+    const task = new Task(dto.type);
+    task.status = TaskStatus.NEW;
+    task.targetId = dto.targetId;
+    this.taskRepository.save(task);
+    if (dto.type === TaskType.DOWNLOAD_MEDIA) {
+      await this.mediaService.updateStatus(dto.targetId, 'SCHEDULED')
+    }
+  }
 
   async getTasks(): Promise<TaskDto[]> {
     const dtos: TaskDto[] = [];
@@ -63,7 +73,7 @@ export class TaskService {
     }
   }
 
-  //@Interval(1000 * 60)
+  @Interval(1000 * 60 * 5) // 5 min
   scheduleCleanTask() {
     this.taskRepository.delete({ status: TaskStatus.COMPLETED });
   }

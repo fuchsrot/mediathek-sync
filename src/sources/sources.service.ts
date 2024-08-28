@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Source } from './source.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateSourceDto } from './dto';
+import { CreateSourceDto, SourceDto } from './dto';
 
 @Injectable()
 export class SourcesService {
@@ -22,11 +22,7 @@ export class SourcesService {
     return this.sourceRepository.findOneBy({ id });
   }
 
-  find(): Promise<Source[]> {
+  find(): Promise<SourceDto[]> {
     return this.sourceRepository.find();
-  }
-
-  getSources(): string {
-    return 'Hello World!';
   }
 }
