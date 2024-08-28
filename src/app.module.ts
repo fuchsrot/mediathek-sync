@@ -10,6 +10,7 @@ import { MediaModule } from './media/media.module';
 import { Media } from './media/media.entity';
 import { TaskModule } from './task/task.module';
 import { Task } from './task/task.entity';
+import { DownloadModule } from './download/download.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { Task } from './task/task.entity';
     SourcesModule,
     MediaModule,
     TaskModule,
+    DownloadModule,
   ],
   controllers: [AppController],
   providers: [AppService],
