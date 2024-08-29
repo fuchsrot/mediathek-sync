@@ -10,6 +10,7 @@ import { Task, Status as TaskStatus, Type as TaskType } from './task.entity';
 import { Repository } from 'typeorm';
 import { CreateTaskDto, TargetDto, TaskDto } from './dto';
 import { Source } from '../sources/source.entity';
+import { DownloadService } from 'src/download/download.service';
 
 @Injectable()
 export class TaskService {
@@ -17,23 +18,24 @@ export class TaskService {
     private readonly sourcesService: SourcesService,
     private readonly mediaService: MediaService,
     private readonly rssService: RssService,
+    private readonly downloadService: DownloadService,
     @InjectRepository(Task)
     private taskRepository: Repository<Task>,
   ) {}
 
   async create(dto: CreateTaskDto): Promise<TaskDto> {
     const task = new Task(dto.type);
-    task.status = TaskStatus.NEW;
+    task.status = TaskStatus.SCHEDULED;
     task.targetId = dto.targetId;
     this.taskRepository.save(task);
-    let taskDto: TaskDto
+    let taskDto: TaskDto;
     if (dto.type === TaskType.DOWNLOAD_MEDIA) {
-      await this.mediaService.updateStatus(dto.targetId, 'SCHEDULED')
+      await this.mediaService.updateStatus(dto.targetId, 'SCHEDULED');
       const media = await this.mediaService.findById(task.targetId);
-      taskDto = this.mapTask(task, media.title)
+      taskDto = this.mapTask(task, media.title);
     } else {
       const source = await this.sourcesService.findById(task.targetId);
-      taskDto = this.mapTask(task, source.title)
+      taskDto = this.mapTask(task, source.title);
     }
     return taskDto;
   }
@@ -45,10 +47,10 @@ export class TaskService {
       let dto: TaskDto;
       if (task.type === TaskType.DOWNLOAD_MEDIA) {
         const media = await this.mediaService.findById(task.targetId);
-        dto = this.mapTask(task, media.title)
+        dto = this.mapTask(task, media.title);
       } else {
-        const source = await this.sourcesService.findById(task.targetId)
-        dto = this.mapTask(task, source.title)
+        const source = await this.sourcesService.findById(task.targetId);
+        dto = this.mapTask(task, source.title);
       }
       dtos.push(dto);
     }
@@ -73,22 +75,40 @@ export class TaskService {
   @Interval(1000 * 10)
   async taskExecutor() {
     const tasks: Task[] = await this.taskRepository.findBy({
-      status: TaskStatus.NEW,
+      status: TaskStatus.SCHEDULED,
     });
     for (const task of tasks) {
       switch (task.type) {
         case TaskType.DOWNLOAD_MEDIA:
+          this.executeDownloadMediaTask(task);
           break;
         case TaskType.REFRESH_RSS:
           this.executeRefreshRssTask(task);
-          // TODO
-          this.taskRepository.update(
-            { id: task.id },
-            { status: TaskStatus.COMPLETED },
-          );
           break;
       }
+      // TODO
+      this.taskRepository.update(
+        { id: task.id },
+        { status: TaskStatus.COMPLETED },
+      );
     }
+  }
+
+  private async executeDownloadMediaTask(task: Task) {
+    this.mediaService.updateStatus(task.targetId, 'RUNNING');
+    const media = await this.mediaService.findById(task.targetId);
+    const file = media.title
+      .replaceAll(' ', '_')
+      .replaceAll('ä', 'ae')
+      .replaceAll('ö', 'oe')
+      .replaceAll('/', '_')
+      .replaceAll(':', '_')
+      .replaceAll('ü', 'ue');
+    await this.downloadService.download(
+      media.link,
+      'downloads/' + file + '.mp4',
+    );
+    this.mediaService.updateStatus(task.targetId, 'DOWNLOADED');
   }
 
   private async executeRefreshRssTask(task: Task) {
@@ -132,7 +152,7 @@ export class TaskService {
       type: task.type,
       target: {
         id: task.id,
-        title
+        title,
       },
     };
   }

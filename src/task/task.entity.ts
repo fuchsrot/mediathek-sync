@@ -12,7 +12,7 @@ export enum Type {
 }
 
 export enum Status {
-  NEW = 'SCHEDULED',
+  SCHEDULED = 'SCHEDULED',
   RUNNING = 'RUNNING',
   ERROR = 'ERROR',
   COMPLETED = 'COMPLETED',
@@ -22,7 +22,7 @@ export enum Status {
 export class Task {
   constructor(type: Type) {
     this.type = type;
-    this.status = Status.NEW;
+    this.status = Status.SCHEDULED;
   }
 
   @PrimaryGeneratedColumn({})

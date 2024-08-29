@@ -15,8 +15,8 @@ export class MediaService {
   }
 
   async updateStatus(id: string, status: Status): Promise<number> {
-    const updateResult = await this.mediaRepository.update({id}, {status})
-    return updateResult.affected || 0
+    const updateResult = await this.mediaRepository.update({ id }, { status });
+    return updateResult.affected || 0;
   }
 
   async findById(id: string): Promise<Media | null> {
