@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import { SourcesService } from '../sources/sources.service';
 import { MediaService } from '../media/media.service';
@@ -14,6 +14,8 @@ import { DownloadService } from 'src/download/download.service';
 
 @Injectable()
 export class TaskService {
+  private readonly logger = new Logger(TaskService.name);
+
   constructor(
     private readonly sourcesService: SourcesService,
     private readonly mediaService: MediaService,
@@ -29,8 +31,10 @@ export class TaskService {
     task.targetId = dto.targetId;
     this.taskRepository.save(task);
     let taskDto: TaskDto;
-    if (dto.type === TaskType.DOWNLOAD_MEDIA) {
-      await this.mediaService.updateStatus(dto.targetId, 'SCHEDULED');
+    if (dto.type === TaskType.DOWNLOAD_MEDIA || dto.type === TaskType.DELETE_FILE) {
+      await this.mediaService.updateStatus(dto.targetId, {
+        status: 'SCHEDULED',
+      });
       const media = await this.mediaService.findById(task.targetId);
       taskDto = this.mapTask(task, media.title);
     } else {
@@ -69,15 +73,20 @@ export class TaskService {
 
   @Interval(1000 * 60 * 5) // 5 min
   scheduleCleanTask() {
+    this.logger.log('start clean up task');
     this.taskRepository.delete({ status: TaskStatus.COMPLETED });
   }
 
   @Interval(1000 * 10)
   async taskExecutor() {
+    this.logger.log('start task execution');
     const tasks: Task[] = await this.taskRepository.findBy({
       status: TaskStatus.SCHEDULED,
     });
     for (const task of tasks) {
+      this.logger.log(
+        `start task execution - type: ${task.type}, id: ${task.id}, targetId: ${task.targetId}, created: ${task.createDate}`,
+      );
       switch (task.type) {
         case TaskType.DOWNLOAD_MEDIA:
           this.executeDownloadMediaTask(task);
@@ -91,24 +100,24 @@ export class TaskService {
         { id: task.id },
         { status: TaskStatus.COMPLETED },
       );
+      this.logger.log(
+        `start task execution - type: ${task.type}, id: ${task.id}`,
+      );
     }
   }
 
+  private async deleteDownloadFileTask(task: Task) {
+    //this.downloadService.
+  }
+
   private async executeDownloadMediaTask(task: Task) {
-    this.mediaService.updateStatus(task.targetId, 'RUNNING');
+    this.mediaService.updateStatus(task.targetId, { status: 'RUNNING' });
     const media = await this.mediaService.findById(task.targetId);
-    const file = media.title
-      .replaceAll(' ', '_')
-      .replaceAll('ä', 'ae')
-      .replaceAll('ö', 'oe')
-      .replaceAll('/', '_')
-      .replaceAll(':', '_')
-      .replaceAll('ü', 'ue');
-    await this.downloadService.download(
-      media.link,
-      'downloads/' + file + '.mp4',
-    );
-    this.mediaService.updateStatus(task.targetId, 'DOWNLOADED');
+    const file = await this.downloadService.download(media.link, media.title);
+    this.mediaService.updateStatus(task.targetId, {
+      status: 'DOWNLOADED',
+      file,
+    });
   }
 
   private async executeRefreshRssTask(task: Task) {

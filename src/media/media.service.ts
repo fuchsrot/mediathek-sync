@@ -14,8 +14,8 @@ export class MediaService {
     this.mediaRepository.save(media);
   }
 
-  async updateStatus(id: string, status: Status): Promise<number> {
-    const updateResult = await this.mediaRepository.update({ id }, { status });
+  async updateStatus(id: string, update: Partial<Media>): Promise<number> {
+    const updateResult = await this.mediaRepository.update({ id }, update);
     return updateResult.affected || 0;
   }
 

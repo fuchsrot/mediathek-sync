@@ -39,6 +39,9 @@ export class Media {
   @Column()
   status: Status;
 
+  @Column({ nullable: true })
+  file?: string;
+
   @ManyToOne(() => Source, (source) => source.media, { eager: true })
   source: Source;
 

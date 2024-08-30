@@ -24,7 +24,7 @@ import { DownloadModule } from './download/download.module';
       entities: [Source, Media, Task],
       database: 'mediatheksync',
       synchronize: true,
-      logging: true,
+      logging: false,
     }),
     RssModule,
     SourcesModule,

@@ -9,6 +9,7 @@ import {
 export enum Type {
   DOWNLOAD_MEDIA = 'DOWNLOAD_MEDIA',
   REFRESH_RSS = 'REFRESH_RSS',
+  DELETE_FILE = 'DELETE_FILE',
 }
 
 export enum Status {
@@ -25,7 +26,7 @@ export class Task {
     this.status = Status.SCHEDULED;
   }
 
-  @PrimaryGeneratedColumn({})
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column()

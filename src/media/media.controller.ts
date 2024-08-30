@@ -1,8 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { MediaDto } from './dto';
 import { MediaService } from './media.service';
-import { title } from 'process';
-import { publicDecrypt } from 'crypto';
 
 @Controller('media')
 export class MediaController {
@@ -11,6 +9,7 @@ export class MediaController {
   @Get()
   async getMedia(): Promise<MediaDto[]> {
     const media = await this.mediaService.find();
+    console.log(typeof media[0].source.id)
     return media.map((media) => ({
       id: media.id,
       title: media.title,
