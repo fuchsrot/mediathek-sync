@@ -31,10 +31,19 @@ export class TaskService {
     task.targetId = dto.targetId;
     this.taskRepository.save(task);
     let taskDto: TaskDto;
-    if (dto.type === TaskType.DOWNLOAD_MEDIA || dto.type === TaskType.DELETE_FILE) {
-      await this.mediaService.updateStatus(dto.targetId, {
-        status: 'SCHEDULED',
-      });
+    if (
+      dto.type === TaskType.DOWNLOAD_MEDIA ||
+      dto.type === TaskType.DELETE_FILE
+    ) {
+      if (dto.type === TaskType.DOWNLOAD_MEDIA) {
+        await this.mediaService.updateStatus(dto.targetId, {
+          status: 'SCHEDULED_DOWNLOAD',
+        });
+      } else {
+        await this.mediaService.updateStatus(dto.targetId, {
+          status: 'SCHEDULED_DELETE',
+        });
+      }
       const media = await this.mediaService.findById(task.targetId);
       taskDto = this.mapTask(task, media.title);
     } else {
@@ -101,7 +110,7 @@ export class TaskService {
         { status: TaskStatus.COMPLETED },
       );
       this.logger.log(
-        `start task execution - type: ${task.type}, id: ${task.id}`,
+        `stop task execution - type: ${task.type}, id: ${task.id}`,
       );
     }
   }

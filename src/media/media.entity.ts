@@ -8,7 +8,13 @@ import {
   ManyToOne,
 } from 'typeorm';
 
-export type Status = 'NEW' | 'SCHEDULED' | 'RUNNING' | 'DOWNLOADED' | 'DELETED';
+export type Status =
+  | 'NEW'
+  | 'SCHEDULED_DOWNLOAD'
+  | 'SCHEDULED_DELETE'
+  | 'RUNNING'
+  | 'DOWNLOADED'
+  | 'DELETED';
 
 @Entity()
 export class Media {

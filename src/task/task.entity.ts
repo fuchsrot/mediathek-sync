@@ -26,7 +26,7 @@ export class Task {
     this.status = Status.SCHEDULED;
   }
 
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
