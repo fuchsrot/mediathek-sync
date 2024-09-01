@@ -19,4 +19,7 @@ jobs:
               uses: actions/setup-node@v4
               with:
                 node-version: '20.x'
-            - run: npm --prefix ./mediathek-sync ci 
+            - run: npm --prefix ./mediathek-sync ci
+            - run: npm --prefix ./mediathek-sync run build
+            - run: npm --prefix ./mediathek-sync-ui ci
+            - run: npm --prefix ./mediathek-sync-ui run build
