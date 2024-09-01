@@ -5,9 +5,10 @@ FROM node:20
 WORKDIR /usr/src/app
 
 # Copy the package.json and package-lock.json files
-COPY dist ./
-COPY package.json ./
+COPY mediathek-sync/dist ./
+COPY mediathek-sync/package.json ./
 
+RUN ls -a
 
 # Expose the port that the app listens on
 EXPOSE 3000
