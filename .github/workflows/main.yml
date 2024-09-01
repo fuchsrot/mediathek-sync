@@ -25,7 +25,7 @@ jobs:
             - run: npm --prefix ./mediathek-sync-ui run build
             - run: ls -la mediathek-sync
             - run: ls -la mediathek-sync-ui
-            - run: docker build --output type=tar,dest=/tmp/mediathek-sync.tar .
+            - run: docker build --output type=tar,dest=/tmp/mediathek-sync.tar ./mediathek-sync
             - name: Upload artifact
               uses: actions/upload-artifact@v4
               with:
