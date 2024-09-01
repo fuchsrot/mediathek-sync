@@ -5,8 +5,8 @@ FROM node:20
 WORKDIR /usr/src/app
 
 # Copy the package.json and package-lock.json files
-COPY mediathek-sync/dist ./
-COPY mediathek-sync/package.json ./
+COPY dist ./
+COPY package.json ./
 
 RUN ls -a
 
